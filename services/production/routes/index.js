@@ -1,19 +1,45 @@
 var express = require("express");
-const customers = require("../controllers/customers");
-const products = require("../controllers/products");
 const { json } = require("express/lib/response");
+const adminUsers = require("../controllers/adminUsers");
+const form = require("../controllers/form");
+const question = require("../controllers/question");
+const response = require("../controllers/response");
 var router = express.Router();
 
 /* GET home page. */
-router.post("/customer", (req, res) => customers.addCustomer(req, res));
-router.get("/customers", (req, res) => customers.getCustomers(req, res));
-router.get("/customer", (req, res) => customers.getSingleCustomer(req, res));
-router.delete("/customer", (req, res) => customers.deleteCustomer(req, res));
-router.put("/customer", (req, res) => customers.updateCustomer(req, res));
+// Admin User Table
+router.get("/users", (req, res) => adminUsers.getUsers(req, res));
+router.get("/user", (req, res) => adminUsers.getSingleUser(req, res));
+router.get("/usersRole", (req, res) => adminUsers.getUsersWithRole(req, res));
+router.get("/roleUsers", (req, res) => adminUsers.getRoleWithUsers(req, res));
+router.post("/user", (req, res) => adminUsers.addUser(req, res));
+router.put("/user", (req, res) => adminUsers.updateUser(req, res));
+router.delete("/user", (req, res) => adminUsers.deleteUser(req, res));
 
-//Product Page 
-router.post("/product", (req, res) => products.addProduct(req, res));
-router.get("/products", (req, res) => products.getProduct(req, res));
+// Form Table
+router.get("/forms", (req, res) => form.getForms(req, res));
+router.get("/formsUser", (req, res) => form.getFormsWithUsers(req, res));
+router.get("/form", (req, res) => form.getSingleForm(req, res));
+router.post("/form", (req, res) => form.addForm(req, res));
+router.put("/form", (req, res) => form.updateForm(req, res));
+router.delete("/form", (req, res) => form.deleteForm(req, res));
+
+// Question Table
+router.get("/questions", (req, res) => question.getQuestions(req, res));
+router.get("/questionsForm", (req, res) => question.getQuestionWithForm(req, res));
+router.get("/quesAns", (req, res) => question.getQuestionWithAns(req, res));
+router.get("/question", (req, res) => question.getSingleQuestion(req, res));
+router.post("/question", (req, res) => question.addQuestion(req, res));
+router.put("/question", (req, res) => question.updateQuestion(req, res));
+router.delete("/question", (req, res) => question.deleteQuestion(req, res));
+
+// Response Table
+router.get("/responses", (req, res) => response.getResponses(req, res));
+router.get("/responsesQueAndForm", (req, res) => response.getResponseWithQueAndForm(req, res));
+router.get("/response", (req, res) => response.getSingleResponse(req, res));
+router.post("/response", (req, res) => response.addResponse(req, res));
+router.put("/response", (req, res) => response.updateResponse(req, res));
+router.delete("/response", (req, res) => response.deleteResponse(req, res));
 
 //Test
 router.get('/test',  (req, res) => res.status(200).json('I dont saad '));

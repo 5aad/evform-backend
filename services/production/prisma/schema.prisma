@@ -1,29 +1,57 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://postgres:pass@host.docker.internal:5434/inven?schema=public"
+  url      = "postgresql://postgres:pass@host.docker.internal:5434/evform?schema=public"
 }
 
-model customers {
-  customer_id      Int       @id @unique(map: "customer_id_UNIQUE") @default(autoincrement())
-  customer_name    String    @db.VarChar(75)
-  customer_email   String?   @db.VarChar(120)
-  customer_phone   String    @db.VarChar(120)
-  customer_address String    @db.VarChar(150)
-  createdAt        DateTime? @default(now())
+model adminuser {
+  userid                                Int       @id @default(autoincrement())
+  username                              String?   @db.VarChar
+  userpassword                          String?   @db.VarChar
+  usertimestamp                         DateTime? @db.Timestamp(6)
+  userrole                              Int
+  userrole_adminuser_userroleTouserrole userrole  @relation("adminuser_userroleTouserrole", fields: [userrole], references: [roleid], onDelete: Cascade)
+  form_form_adminuserToadminuser        form[]    @relation("form_adminuserToadminuser")
 }
 
-model products {
-  product_id    Int    @id @unique(map: "product_id_UNIQUE") @default(autoincrement())
-  product_name  String @db.VarChar(120)
-  product_price Float
-  category_name  String @db.VarChar(120)
-  brand_name     String @db.VarChar(120)
+model form {
+  formid                              Int        @id @default(autoincrement())
+  formname                            String?    @db.VarChar
+  formtimestamp                       DateTime?  @db.Timestamp(6)
+  adminuser                           Int
+  adminuser_form_adminuserToadminuser adminuser  @relation("form_adminuserToadminuser", fields: [adminuser], references: [userid], onDelete: Cascade)
+  question_question_formToform        question[] @relation("question_formToform")
+  response_response_formToform        response[] @relation("response_formToform")
+}
+
+model question {
+  id                                   Int        @id @default(autoincrement())
+  question                             String?    @db.VarChar
+  questimestamp                        DateTime?  @db.Timestamp(6)
+  msgrequired                          Boolean?
+  msgerror                             String?    @db.VarChar
+  placeholder                          String?    @db.VarChar
+  form                                 Int
+  form_question_formToform             form       @relation("question_formToform", fields: [form], references: [formid], onDelete: Cascade)
+  response_response_questionToquestion response[] @relation("response_questionToquestion")
+}
+
+model response {
+  id                                   Int       @id @default(autoincrement())
+  answer                               String?   @db.VarChar
+  anstimestamp                         DateTime? @db.Timestamp(6)
+  question                             Int
+  form                                 Int
+  form_response_formToform             form      @relation("response_formToform", fields: [form], references: [formid], onDelete: Cascade)
+  question_response_questionToquestion question  @relation("response_questionToquestion", fields: [question], references: [id], onDelete: Cascade)
+}
+
+model userrole {
+  roleid                                 Int         @id @default(autoincrement())
+  rolename                               String?     @db.VarChar
+  adminuser_adminuser_userroleTouserrole adminuser[] @relation("adminuser_userroleTouserrole")
 }
