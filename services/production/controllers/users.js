@@ -206,24 +206,31 @@ module.exports = {
           validator.isEmpty(role_id.toString())
         )
           return res.status(400).send({ data: "Please provide all fields " });
-        const user = await prisma.users.update({
-          where: {
-            id: id,
-          },
-          data: {
-            username,
-            password: crypto
-              .createHmac("sha256", "secret")
-              .update(password)
-              .digest("hex"),
-            role_id,
-          },
-        });
-        return res.status(200).json({
-          status: 200,
-          message: "User Update Successfully",
-          data: user,
-        });
+        try {
+          const user = await prisma.users.update({
+            where: {
+              id: id,
+            },
+            data: {
+              username,
+              password: crypto
+                .createHmac("sha256", "secret")
+                .update(password)
+                .digest("hex"),
+              role_id,
+            },
+          });
+          return res.status(200).json({
+            status: 200,
+            message: "User Update Successfully",
+            data: user,
+          });
+        } catch (error) {
+          if (error.code === "P2025") {
+            return res.status(400).send({ data: "Form does not exist!" });
+          }
+          throw error;
+        }
       } else {
         return res
           .status(401)
@@ -242,15 +249,22 @@ module.exports = {
         token = await verifyToken(token.split(" ")[1]);
         if (validator.isEmpty(id.toString()))
           return res.status(400).send({ data: "Please provide all fields " });
-        await prisma.users.delete({
-          where: {
-            id: Number(id),
-          },
-        });
-        return res.status(200).json({
-          status: 200,
-          message: "User Delete Successfully",
-        });
+        try {
+          await prisma.users.delete({
+            where: {
+              id: Number(id),
+            },
+          });
+          return res.status(200).json({
+            status: 200,
+            message: "User Delete Successfully",
+          });
+        } catch (error) {
+          if (error.code === "P2025") {
+            return res.status(400).send({ data: "User does not exist!" });
+          }
+          throw error;
+        }
       } else {
         return res
           .status(401)
