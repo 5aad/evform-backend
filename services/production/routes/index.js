@@ -10,9 +10,11 @@ var router = express.Router();
 // Admin User Table
 router.get("/users", (req, res) => adminUsers.getUsers(req, res));
 router.get("/user", (req, res) => adminUsers.getSingleUser(req, res));
-router.get("/usersRole", (req, res) => adminUsers.getUsersWithRole(req, res));
-router.get("/roleUsers", (req, res) => adminUsers.getRoleWithUsers(req, res));
+// router.get("/usersRole", (req, res) => adminUsers.getUsersWithRole(req, res));
+// router.get("/roleUsers", (req, res) => adminUsers.getRoleWithUsers(req, res));
 router.post("/user", (req, res) => adminUsers.addUser(req, res));
+router.post("/super", (req, res) => adminUsers.createSuperAdmin(req, res));
+router.post("/login", (req, res) => adminUsers.login(req, res));
 router.put("/user", (req, res) => adminUsers.updateUser(req, res));
 router.delete("/user", (req, res) => adminUsers.deleteUser(req, res));
 
@@ -26,7 +28,9 @@ router.delete("/form", (req, res) => form.deleteForm(req, res));
 
 // Question Table
 router.get("/questions", (req, res) => question.getQuestions(req, res));
-router.get("/questionsForm", (req, res) => question.getQuestionWithForm(req, res));
+router.get("/questionsForm", (req, res) =>
+  question.getQuestionWithForm(req, res)
+);
 router.get("/quesAns", (req, res) => question.getQuestionWithAns(req, res));
 router.get("/question", (req, res) => question.getSingleQuestion(req, res));
 router.post("/question", (req, res) => question.addQuestion(req, res));
@@ -35,12 +39,14 @@ router.delete("/question", (req, res) => question.deleteQuestion(req, res));
 
 // Response Table
 router.get("/responses", (req, res) => response.getResponses(req, res));
-router.get("/responsesQueAndForm", (req, res) => response.getResponseWithQueAndForm(req, res));
+router.get("/responsesQueAndForm", (req, res) =>
+  response.getResponseWithQueAndForm(req, res)
+);
 router.get("/response", (req, res) => response.getSingleResponse(req, res));
 router.post("/response", (req, res) => response.addResponse(req, res));
 router.put("/response", (req, res) => response.updateResponse(req, res));
 router.delete("/response", (req, res) => response.deleteResponse(req, res));
 
 //Test
-router.get('/test',  (req, res) => res.status(200).json('I dont saad '));
+router.get("/test", (req, res) => res.status(200).json("I dont saad "));
 module.exports = router;
