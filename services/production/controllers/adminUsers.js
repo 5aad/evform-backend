@@ -8,79 +8,63 @@ module.exports = {
   // GET
   async getUsers(req, res) {
     try {
-      const users = await prisma.users.findMany({});
-      res.status(200).json({
-        data: users,
-      });
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        res.status(500).json({
-          message: e.meta.cause,
+      let token = req.headers["authorization"];
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+
+        const users = await prisma.users.findMany({
+          include: {
+            role: {
+              select: {
+                role: true,
+              },
+            },
+          },
         });
+        return res.status(200).json({ status: 200, data: users });
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide valid auth token" });
       }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
     }
   },
-  // Get users by the Role.
-  // async getUsersWithRole(req, res) {
-  //   try {
-  //     const users = await prisma.adminuser.findMany({
-  //       include: {
-  //         userrole_adminuser_userroleTouserrole: true,
-  //       },
-  //     });
-  //     res.status(200).json({
-  //       data: users,
-  //     });
-  //   } catch (e) {
-  //     if (e instanceof Prisma.PrismaClientKnownRequestError) {
-  //       res.status(500).json({
-  //         message: e.meta.cause,
-  //       });
-  //     }
-  //   }
-  // },
-  // Get Role by the Users array
-  // async getRoleWithUsers(req, res) {
-  //   try {
-  //     const role = await prisma.userrole.findMany({
-  //       include: {
-  //         adminuser_adminuser_userroleTouserrole: true,
-  //       },
-  //     });
-  //     res.status(200).json({
-  //       data: role,
-  //     });
-  //   } catch (e) {
-  //     if (e instanceof Prisma.PrismaClientKnownRequestError) {
-  //       res.status(500).json({
-  //         message: e.meta.cause,
-  //       });
-  //     }
-  //   }
-  // },
 
   // GET SINGLE USER
   async getSingleUser(req, res) {
-    const { id } = req.query;
-    if (id) {
-      try {
-        const user = await prisma.adminuser.findUnique({
+    try {
+      const { id } = req.query;
+      let token = req.headers["authorization"];
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (validator.isEmpty(id.toString()))
+          return res.status(400).send({ data: "Please provide all fields " });
+
+        const user = await prisma.users.findUnique({
           where: {
-            userid: Number(id),
+            id: Number(id),
+          },
+          include: {
+            role: {
+              select: {
+                role: true,
+              },
+            },
           },
         });
-        res.status(200).json({
+        return res.status(200).json({
+          status: 200,
           data: user,
         });
-      } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-          res.status(500).json({
-            message: e.meta.cause,
-          });
-        }
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide valid auth token" });
       }
-    } else {
-      res.status(400).json({ message: "Invalid Request" });
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
     }
   },
 
@@ -122,11 +106,7 @@ module.exports = {
 
       return res.status(200).send({ status: 200, data: user });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        res.status(500).json({
-          message: e.meta.cause,
-        });
-      }
+      return res.status(500).json({ status: 500, message: e.message });
     }
   },
 
@@ -183,11 +163,7 @@ module.exports = {
           .send({ status: 401, data: "Please provide valid auth token" });
       }
     } catch (error) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        res.status(500).json({
-          message: e.meta.cause,
-        });
-      }
+      return res.status(500).json({ status: 500, message: e.message });
     }
   },
 
@@ -199,11 +175,11 @@ module.exports = {
         return res.status(400).send({ data: "Please provide all fields " });
       const userFound = await prisma.users.findFirst({
         where: {
-          username: username, // Replace with the actual email value
+          username: username,
           password: crypto
             .createHmac("sha256", "secret")
             .update(password)
-            .digest("hex"), // Replace with the actual hashed password value
+            .digest("hex"),
         },
       });
       if (userFound) {
@@ -213,63 +189,77 @@ module.exports = {
       }
       return res.status(404).send({ data: "No such user found!" });
     } catch (error) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        res.status(500).json({
-          message: e.meta.cause,
-        });
-      }
+      return res.status(500).json({ status: 500, message: e.message });
     }
   },
 
   // PUT
   async updateUser(req, res) {
-    const { userid, username, userpassword, userrole } = req.body;
-    if (userid) {
-      try {
-        const user = await prisma.adminuser.update({
+    try {
+      const { id, username, password, role_id } = req.body;
+      let token = req.headers["authorization"];
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (
+          validator.isEmpty(id.toString()) ||
+          validator.isEmpty(username) ||
+          validator.isEmpty(password) ||
+          validator.isEmpty(role_id.toString())
+        )
+          return res.status(400).send({ data: "Please provide all fields " });
+        const user = await prisma.users.update({
           where: {
-            userid: userid,
+            id: id,
           },
           data: {
             username,
-            userpassword,
-            userrole,
+            password: crypto
+              .createHmac("sha256", "secret")
+              .update(password)
+              .digest("hex"),
+            role_id,
           },
         });
-        res.status(200).json({
+        return res.status(200).json({
+          status: 200,
           message: "User Update Successfully",
           data: user,
         });
-      } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-          res.status(500).json({
-            message: e.meta.cause,
-          });
-        }
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide valid auth token" });
       }
-    } else res.status(400).json({ message: "Invalid Request" });
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
   },
   // DELETE
   async deleteUser(req, res) {
-    const { userid } = req.body;
-    if (userid) {
-      try {
-        await prisma.adminuser.delete({
+    try {
+      const { id } = req.query;
+      let token = req.headers["authorization"];
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (validator.isEmpty(id.toString()))
+          return res.status(400).send({ data: "Please provide all fields " });
+        await prisma.users.delete({
           where: {
-            userid: userid,
+            id: Number(id),
           },
         });
-        res.status(200).json({
+        return res.status(200).json({
+          status: 200,
           message: "User Delete Successfully",
         });
-      } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-          res.status(500).json({
-            message: e.meta.cause,
-          });
-        }
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide valid auth token" });
       }
-    } else res.status(400).json({ message: "Invalid Request" });
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
   },
 };
 

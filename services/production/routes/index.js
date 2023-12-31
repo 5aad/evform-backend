@@ -10,8 +10,6 @@ var router = express.Router();
 // Admin User Table
 router.get("/users", (req, res) => adminUsers.getUsers(req, res));
 router.get("/user", (req, res) => adminUsers.getSingleUser(req, res));
-// router.get("/usersRole", (req, res) => adminUsers.getUsersWithRole(req, res));
-// router.get("/roleUsers", (req, res) => adminUsers.getRoleWithUsers(req, res));
 router.post("/user", (req, res) => adminUsers.addUser(req, res));
 router.post("/super", (req, res) => adminUsers.createSuperAdmin(req, res));
 router.post("/login", (req, res) => adminUsers.login(req, res));
