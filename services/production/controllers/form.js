@@ -1,139 +1,193 @@
 const { PrismaClient, Prisma } = require("@prisma/client");
 const prisma = new PrismaClient();
+const generateToken = require("../utilities/generateToken");
+const verifyToken = require("../utilities/verifyToken");
+const validator = require("validator");
+const crypto = require("crypto");
 
 module.exports = {
   // GET
   async getForms(req, res) {
     try {
-      const forms = await prisma.form.findMany({});
-      res.status(200).json({
-        data: forms,
-      });
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        res.status(500).json({
-          message: e.meta.cause,
+      let token = req.headers["authorization"];
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        const forms = await prisma.form.findMany({});
+        return res.status(200).json({
+          data: forms,
         });
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide valid auth token" });
       }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
     }
   },
-// Get forms with users data
+  // Get forms with users data
   async getFormsWithUsers(req, res) {
     try {
-      const forms = await prisma.form.findMany({
-        include: {
-            adminuser_form_adminuserToadminuser: true,
-        },
-      });
-      res.status(200).json({
-        data: forms,
-      });
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        res.status(500).json({
-          message: e.meta.cause,
-        });
-      }
-    }
-  },
- 
-  // GET SINGLE FORM
-  async getSingleForm(req, res) {
-    const { id } = req.query;
-    if (id) {
-      try {
-        const form = await prisma.form.findUnique({
-          where: {
-            formid: Number(id),
+      let token = req.headers["authorization"];
+      if (token) {
+        const forms = await prisma.form.findMany({
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                role_id: true,
+              },
+            },
           },
         });
-        res.status(200).json({
+        return res.status(200).json({
+          data: forms,
+        });
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide valid auth token" });
+      }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+
+  // GET SINGLE FORM
+  async getSingleForm(req, res) {
+    try {
+      const { id } = req.query;
+      let token = req.headers["authorization"];
+      if (token) {
+        if (validator.isEmpty(id.toString()))
+          return res.status(400).send({ data: "Please provide id " });
+        const form = await prisma.form.findUnique({
+          where: {
+            id: Number(id),
+          },
+        });
+        return res.status(200).json({
           data: form,
         });
-      } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-          res.status(500).json({
-            message: e.meta.cause,
-          });
-        }
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide valid auth token" });
       }
-    } else {
-      res.status(400).json({ message: "Invalid Request" });
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
     }
   },
   // POST
   async addForm(req, res) {
-    const { formname, formtimestamp, adminuser } = req.body;
-    if (formname || formtimestamp || adminuser) { 
-      try {
-        await prisma.form.create({
+    try {
+      const { name, user_id } = req.body;
+      let token = req.headers["authorization"];
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (validator.isEmpty(name) || validator.isEmpty(user_id.toString()))
+          return res.status(400).send({ data: "Please provide all fields " });
+        const form = await prisma.form.create({
           data: {
-            formname,
-            formtimestamp,
-            adminuser,
+            name,
+            user_id,
           },
         });
-        res.status(200).json({ message: "Data add successfully" });
-      } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-          res.status(500).json({
-            message: e.meta.cause,
-          });
-        }
+        return res
+          .status(200)
+          .json({ message: "Data add successfully", data: form });
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide valid auth token" });
       }
-    } else {
-      res.status(400).json({ message: "Invalid Request" });
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
     }
   },
 
   // PUT
   async updateForm(req, res) {
-    const { formid, formname, adminuser } = req.body;
-    if (formid) {
-      try {
-        const form = await prisma.form.update({
-          where: {
-            formid: formid,
-          }, 
-          data: {
-            formname,
-            adminuser,
-          },
-        });
-        res.status(200).json({
-          message: "Form Update Successfully",
-          data: form,
-        });
-      } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-          res.status(500).json({
-            message: e.meta.cause,
+    try {
+      const { id, name, user_id } = req.body;
+      let token = req.headers["authorization"];
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if ( !id ||
+          validator.isEmpty(id.toString()) ||
+          !name ||
+          validator.isEmpty(name) ||
+          !user_id ||
+          validator.isEmpty(user_id.toString())
+        )
+          return res.status(400).send({ data: "Please provide all fields " });
+        try {
+          const form = await prisma.form.update({
+            where: {
+              id: Number(id),
+            },
+            data: {
+              name,
+              user_id,
+            },
           });
+          return res.status(200).json({
+            status: 200,
+            message: "Form Update Successfully",
+            data: form,
+          });
+        } catch (error) {
+          if (error.code === "P2025") {
+            return res.status(400).send({ data: "Form data does not exist!" });
+          }
+          throw error;
         }
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide valid auth token" });
       }
-    } else res.status(400).json({ message: "Invalid Request" });
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
   },
+
   // DELETE
-    async deleteForm(req, res) {
-      const { formid } = req.body;
-      if (formid) {
+  async deleteForm(req, res) {
+    try {
+      const { id } = req.query;
+      let token = req.headers["authorization"];
+
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+
+        if (!id || validator.isEmpty(id.toString())) {
+          return res.status(400).send({ data: "Please provide all fields" });
+        }
+
         try {
           await prisma.form.delete({
             where: {
-              formid: formid,
+              id: Number(id),
             },
           });
-          res.status(200).json({
+          return res.status(200).json({
             message: "Form Delete Successfully",
           });
-        } catch (e) {
-          if (e instanceof Prisma.PrismaClientKnownRequestError) {
-            res.status(500).json({
-              message: e.meta.cause,
-            });
+        } catch (error) {
+          if (error.code === "P2025") {
+            return res.status(400).send({ data: "Form does not exist!" });
           }
+          throw error;
         }
-      } else res.status(400).json({ message: "Invalid Request" });
-    },
-
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide valid auth token" });
+      }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
 };

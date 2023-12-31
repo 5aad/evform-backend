@@ -10,46 +10,49 @@ datasource db {
 
 model users {
   id         Int      @id @default(autoincrement())
-  username   String?  @db.VarChar @unique
+  username   String?  @unique @db.VarChar
   password   String?  @db.VarChar
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   role_id    Int
   role       roles    @relation("users_to_roles", fields: [role_id], references: [id], onDelete: Cascade)
-  // form_form_adminuserToadminuser        form[]   @relation("form_adminuserToadminuser")
+  forms      form[]   @relation("form_to_users")
 }
 
-// model form {
-//   formid                              Int        @id @default(autoincrement())
-//   formname                            String?    @db.VarChar
-//   formtimestamp                       DateTime?  @db.Timestamp(6)
-//   user_id                           Int
-//   user adminuser  @relation("form_adminuserToadminuser", fields: [user_id], references: [id], onDelete: Cascade)
-//   question_question_formToform        question[] @relation("question_formToform")
-//   response_response_formToform        response[] @relation("response_formToform")
-// }
+model form {
+  id         Int        @id @default(autoincrement())
+  name       String?    @db.VarChar
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  user_id    Int
+  user       users      @relation("form_to_users", fields: [user_id], references: [id], onDelete: Cascade)
+  questions  question[] @relation("question_to_form")
+  responses  response[] @relation("response_to_form")
+}
 
-// model question {
-//   id                                   Int        @id @default(autoincrement())
-//   question                             String?    @db.VarChar
-//   questimestamp                        DateTime?  @db.Timestamp(6)
-//   msgrequired                          Boolean?
-//   msgerror                             String?    @db.VarChar
-//   placeholder                          String?    @db.VarChar
-//   form                                 Int
-//   form_question_formToform             form       @relation("question_formToform", fields: [form], references: [formid], onDelete: Cascade)
-//   response_response_questionToquestion response[] @relation("response_questionToquestion")
-// }
+model question {
+  id          Int        @id @default(autoincrement())
+  question    String?    @db.VarChar
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+  required    Boolean?
+  error       String?    @db.VarChar
+  placeholder String?    @db.VarChar
+  form_id     Int
+  form        form       @relation("question_to_form", fields: [form_id], references: [id], onDelete: Cascade)
+  responses   response[] @relation("response_to_question")
+}
 
-// model response {
-//   id                                   Int       @id @default(autoincrement())
-//   answer                               String?   @db.VarChar
-//   anstimestamp                         DateTime? @db.Timestamp(6)
-//   question                             Int
-//   form                                 Int
-//   form_response_formToform             form      @relation("response_formToform", fields: [form], references: [formid], onDelete: Cascade)
-//   question_response_questionToquestion question  @relation("response_questionToquestion", fields: [question], references: [id], onDelete: Cascade)
-// }
+model response {
+  id          Int      @id @default(autoincrement())
+  answer      String?  @db.VarChar
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  question_id Int
+  form_id     Int
+  form        form     @relation("response_to_form", fields: [form_id], references: [id], onDelete: Cascade)
+  question    question @relation("response_to_question", fields: [question_id], references: [id], onDelete: Cascade)
+}
 
 model roles {
   id         Int      @id @default(autoincrement())

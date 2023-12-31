@@ -1,6 +1,6 @@
 var express = require("express");
 const { json } = require("express/lib/response");
-const adminUsers = require("../controllers/adminUsers");
+const users = require("../controllers/users");
 const form = require("../controllers/form");
 const question = require("../controllers/question");
 const response = require("../controllers/response");
@@ -8,13 +8,13 @@ var router = express.Router();
 
 /* GET home page. */
 // Admin User Table
-router.get("/users", (req, res) => adminUsers.getUsers(req, res));
-router.get("/user", (req, res) => adminUsers.getSingleUser(req, res));
-router.post("/user", (req, res) => adminUsers.addUser(req, res));
-router.post("/super", (req, res) => adminUsers.createSuperAdmin(req, res));
-router.post("/login", (req, res) => adminUsers.login(req, res));
-router.put("/user", (req, res) => adminUsers.updateUser(req, res));
-router.delete("/user", (req, res) => adminUsers.deleteUser(req, res));
+router.get("/users", (req, res) => users.getUsers(req, res));
+router.get("/user", (req, res) => users.getSingleUser(req, res));
+router.post("/user", (req, res) => users.addUser(req, res));
+router.post("/super", (req, res) => users.createSuperAdmin(req, res));
+router.post("/login", (req, res) => users.login(req, res));
+router.put("/user", (req, res) => users.updateUser(req, res));
+router.delete("/user", (req, res) => users.deleteUser(req, res));
 
 // Form Table
 router.get("/forms", (req, res) => form.getForms(req, res));

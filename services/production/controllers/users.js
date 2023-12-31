@@ -11,7 +11,6 @@ module.exports = {
       let token = req.headers["authorization"];
       if (token) {
         token = await verifyToken(token.split(" ")[1]);
-
         const users = await prisma.users.findMany({
           include: {
             role: {
