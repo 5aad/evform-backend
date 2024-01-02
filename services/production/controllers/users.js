@@ -123,12 +123,12 @@ module.exports = {
             validator.isEmpty(password) ||
             validator.isEmpty(role_id.toString())
           )
-            return res.status(400).send({ data: "Please provide all fields " });
+            return res.status(400).send({ message: "Please provide all fields " });
           const exists = await prisma.users.findUnique({
             where: { username: username },
           });
           if (exists)
-            return res.status(400).send({ data: "user already exists!" });
+            return res.status(404).send({ message: "user already exists!" });
           const existingRole = await prisma.roles.findUnique({
             where: { id: role_id },
           });
@@ -140,7 +140,7 @@ module.exports = {
             });
           }
 
-          const user = await prisma.users.create({
+           await prisma.users.create({
             data: {
               username,
               password: crypto
@@ -151,7 +151,7 @@ module.exports = {
             },
           });
 
-          return res.status(200).send({ status: 200, data: user });
+          return res.status(200).send({ status: 200, message: "User add successfully"  });
         } else
           return res
             .status(401)
@@ -171,7 +171,7 @@ module.exports = {
     try {
       const { username, password } = req.body;
       if (validator.isEmpty(username) || validator.isEmpty(password))
-        return res.status(400).send({ data: "Please provide all fields " });
+        return res.status(400).send({ message: "Please provide all fields " });
       const userFound = await prisma.users.findFirst({
         where: {
           username: username,
@@ -186,7 +186,7 @@ module.exports = {
           .status(200)
           .send({ status: 200, data: generateToken(userFound) });
       }
-      return res.status(404).send({ data: "No such user found!" });
+      return res.status(404).send({ message: "No such user found!" });
     } catch (error) {
       return res.status(500).json({ status: 500, message: e.message });
     }
