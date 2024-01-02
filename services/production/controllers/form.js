@@ -12,7 +12,20 @@ module.exports = {
       let token = req.headers["authorization"];
       if (token) {
         token = await verifyToken(token.split(" ")[1]);
-        const forms = await prisma.form.findMany({});
+        const forms = await prisma.form.findMany({
+          select: {
+            id: true,
+            title: true,
+            user_id: true,
+            responses: {
+              select:{
+                id: true,
+                answer: true,
+                question_id: true
+              }
+            }
+          }
+        });
         return res.status(200).json({
           data: forms,
         });
@@ -66,6 +79,26 @@ module.exports = {
           where: {
             id: Number(id),
           },
+          select: {
+            id: true,
+            title: true,
+            user_id: true,
+            questions: {
+              select: {
+                id: true,
+                question: true,
+                required: true,
+                error: true,
+                placeholder: true,
+                options: {
+                  select: {
+                    label: true,
+                    value: true,
+                  },
+                },
+              },
+            },
+          },
         });
         return res.status(200).json({
           data: form,
@@ -82,25 +115,55 @@ module.exports = {
   // POST
   async addForm(req, res) {
     try {
-      const { name, user_id } = req.body;
+      const { title, user_id, questions } = req.body;
       let token = req.headers["authorization"];
+
       if (token) {
         token = await verifyToken(token.split(" ")[1]);
-        if (validator.isEmpty(name) || validator.isEmpty(user_id.toString()))
-          return res.status(400).send({ data: "Please provide all fields " });
+
+        if (validator.isEmpty(title) || validator.isEmpty(user_id.toString()))
+          return res.status(400).send({ data: "Please provide all fields" });
+
         const form = await prisma.form.create({
           data: {
-            name,
+            title,
             user_id,
+            questions: {
+              create: questions.map((q) => ({
+                // question_type: q.question_type,
+                question: q.question,
+                required: q.required,
+                error: q.error_msg,
+                placeholder: q.placeholder,
+                options: q.options
+                  ? {
+                      create: q.options.map((opt) => ({
+                        label: opt.label,
+                        value: opt.value,
+                      })),
+                    }
+                  : undefined,
+              })),
+            },
+          },
+          include: {
+            questions: {
+              include: {
+                options: true,
+              },
+            },
           },
         });
-        return res
-          .status(200)
-          .json({ message: "Data add successfully", data: form });
+
+        return res.status(200).json({
+          status: 200,
+          message: "Data added successfully",
+          data: form,
+        });
       } else {
         return res
           .status(401)
-          .send({ status: 401, data: "Please provide valid auth token" });
+          .send({ status: 401, data: "Please provide a valid auth token" });
       }
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
@@ -110,14 +173,15 @@ module.exports = {
   // PUT
   async updateForm(req, res) {
     try {
-      const { id, name, user_id } = req.body;
+      const { id, title, user_id } = req.body;
       let token = req.headers["authorization"];
       if (token) {
         token = await verifyToken(token.split(" ")[1]);
-        if ( !id ||
+        if (
+          !id ||
           validator.isEmpty(id.toString()) ||
-          !name ||
-          validator.isEmpty(name) ||
+          !title ||
+          validator.isEmpty(title) ||
           !user_id ||
           validator.isEmpty(user_id.toString())
         )
@@ -128,7 +192,7 @@ module.exports = {
               id: Number(id),
             },
             data: {
-              name,
+              title,
               user_id,
             },
           });

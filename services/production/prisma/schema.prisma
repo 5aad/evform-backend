@@ -18,29 +18,37 @@ model users {
   role       roles    @relation("users_to_roles", fields: [role_id], references: [id], onDelete: Cascade)
   forms      form[]   @relation("form_to_users")
 }
+model option {
+  id          Int      @id @default(autoincrement())
+  label       String   @db.VarChar
+  value       Int
+  question_id Int
+  question    question @relation(fields: [question_id], references: [id], onDelete: Cascade)
+}
+
+model question {
+  id            Int        @id @default(autoincrement())
+  question      String?    @db.VarChar
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+  required      Boolean?
+  error         String?    @db.VarChar
+  placeholder   String?    @db.VarChar
+  form_id       Int
+  form          form       @relation("question_to_form", fields: [form_id], references: [id], onDelete: Cascade)
+  options       option[]   // Add this relation for multiple-choice questions
+  responses     response[] @relation("response_to_question")
+}
 
 model form {
   id         Int        @id @default(autoincrement())
-  name       String?    @db.VarChar
+  title      String?    @db.VarChar
   created_at DateTime   @default(now())
   updated_at DateTime   @updatedAt
   user_id    Int
   user       users      @relation("form_to_users", fields: [user_id], references: [id], onDelete: Cascade)
   questions  question[] @relation("question_to_form")
   responses  response[] @relation("response_to_form")
-}
-
-model question {
-  id          Int        @id @default(autoincrement())
-  question    String?    @db.VarChar
-  created_at  DateTime   @default(now())
-  updated_at  DateTime   @updatedAt
-  required    Boolean?
-  error       String?    @db.VarChar
-  placeholder String?    @db.VarChar
-  form_id     Int
-  form        form       @relation("question_to_form", fields: [form_id], references: [id], onDelete: Cascade)
-  responses   response[] @relation("response_to_question")
 }
 
 model response {
