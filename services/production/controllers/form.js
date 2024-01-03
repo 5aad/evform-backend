@@ -96,7 +96,7 @@ module.exports = {
                 placeholder: true,
                 options: {
                   select: {
-                    label: true
+                    label: true,
                   },
                 },
               },
@@ -160,7 +160,7 @@ module.exports = {
                 options: q.options
                   ? {
                       create: q.options.map((opt) => ({
-                        label: opt.label
+                        label: opt.label,
                       })),
                     }
                   : undefined,
@@ -207,9 +207,7 @@ module.exports = {
       if (token) {
         token = await verifyToken(token.split(" ")[1]);
         if (
-          !id ||
           validator.isEmpty(id.toString()) ||
-          !live ||
           validator.isEmpty(live.toString())
         )
           return res.status(400).send({ data: "Please provide all fields " });
@@ -219,7 +217,7 @@ module.exports = {
               id: Number(id),
             },
             data: {
-              live: Boolean(live)
+              live: Boolean(live),
             },
           });
           return res.status(200).json({
@@ -309,9 +307,9 @@ module.exports = {
               id: Number(id),
             },
           });
-          return res.status(200).json({
-            message: "Form Delete Successfully",
-          });
+          return res
+            .status(200)
+            .json({ status: 200, message: "Form Delete Successfully" });
         } catch (error) {
           if (error.code === "P2025") {
             return res.status(400).send({ data: "Form does not exist!" });
