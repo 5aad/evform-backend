@@ -75,8 +75,6 @@ module.exports = {
   async getSingleForm(req, res) {
     try {
       const { id } = req.query;
-      let token = req.headers["authorization"];
-      if (token) {
         if (validator.isEmpty(id.toString()))
           return res.status(400).send({ data: "Please provide id " });
         const form = await prisma.form.findUnique({
@@ -90,12 +88,14 @@ module.exports = {
             questions: {
               select: {
                 id: true,
+                question_type:true,
                 question: true,
                 required: true,
                 error: true,
                 placeholder: true,
                 options: {
                   select: {
+                    id:true,
                     label: true,
                   },
                 },
@@ -106,11 +106,7 @@ module.exports = {
         return res.status(200).json({
           data: form,
         });
-      } else {
-        return res
-          .status(401)
-          .send({ status: 401, data: "Please provide valid auth token" });
-      }
+     
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
     }
