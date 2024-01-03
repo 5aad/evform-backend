@@ -86,29 +86,54 @@ module.exports = {
       return res.status(500).json({ status: 500, message: e.message });
     }
   },
+
   // POST
   async addResponse(req, res) {
     try {
-      const { answer, question_id, form_id } = req.body;
+      const { form_id, responses } = req.body;
       let token = req.headers["authorization"];
+
       if (token) {
         token = await verifyToken(token.split(" ")[1]);
+
         if (
-          validator.isEmpty(answer) ||
-          validator.isEmpty(question_id.toString()) ||
-          validator.isEmpty(form_id.toString())
-        )
-          return res.status(400).send({ data: "Please provide all fields " });
-        const reponse = await prisma.response.create({
-          data: {
-            answer,
-            question_id,
-            form_id,
-          },
-        });
+          validator.isEmpty(form_id.toString()) ||
+          !Array.isArray(responses)
+        ) {
+          return res
+            .status(400)
+            .send({ data: "Please provide valid form_id and responses array" });
+        }
+
+        const createdResponses = [];
+
+        for (const response of responses) {
+          const { question_id, answer } = response;
+
+          if (!question_id || answer === undefined) {
+            return res
+              .status(400)
+              .send({
+                data: "Please provide valid question_id and answer for each response",
+              });
+          }
+
+          const createdResponse = await prisma.response.create({
+            data: {
+              form_id,
+              question_id,
+              answer: Array.isArray(answer)
+                ? JSON.stringify(answer)
+                : answer.toString(),
+            },
+          });
+
+          createdResponses.push(createdResponse);
+        }
+
         return res.status(200).json({
-          message: "Data add successfully",
-          data: reponse,
+          message: "Data added successfully",
+          data: createdResponses,
         });
       } else {
         return res
@@ -119,7 +144,6 @@ module.exports = {
       return res.status(500).json({ status: 500, message: e.message });
     }
   },
-
   // PUT
   async updateResponse(req, res) {
     try {

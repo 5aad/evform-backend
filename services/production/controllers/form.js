@@ -18,9 +18,9 @@ module.exports = {
             id: true,
             title: true,
             user_id: true,
-            created_at:true,
-            live:true,
-            url:true,
+            created_at: true,
+            live: true,
+            url: true,
             responses: {
               select: {
                 id: true,
@@ -128,15 +128,32 @@ module.exports = {
         if (validator.isEmpty(title) || validator.isEmpty(user_id.toString()))
           return res.status(400).send({ data: "Please provide all fields" });
 
+        const uniqueQuestionTypeIds = Array.from(
+          new Set(questions.map((q) => q.question_type_id))
+        );
+
+        for (const question_type_id of uniqueQuestionTypeIds) {
+          const existingType = await prisma.question_type.findUnique({
+            where: { id: question_type_id },
+          });
+
+          if (!existingType) {
+            await prisma.question_type.create({
+              data: {
+                label: getQuestionType(question_type_id),
+              },
+            });
+          }
+        }
         const form = await prisma.form.create({
           data: {
             title,
             user_id,
-            live:false,
+            live: false,
             url: "",
             questions: {
               create: questions.map((q) => ({
-                // question_type: {create:getQuestionType(q.question_type)},
+                question_type_id: q.question_type_id,
                 question: q.question,
                 required: q.required,
                 error: q.error_msg,
@@ -166,9 +183,9 @@ module.exports = {
             id: form.id,
           },
           data: {
-            url:encryptUrl(`${form.id}`, form.title)
+            url: encryptUrl(`${form.id}`, form.title),
           },
-        })
+        });
 
         return res.status(200).json({
           status: 200,
