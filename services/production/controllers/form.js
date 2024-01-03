@@ -17,14 +17,16 @@ module.exports = {
             id: true,
             title: true,
             user_id: true,
+            created_at:true,
+            live:true,
             responses: {
-              select:{
+              select: {
                 id: true,
                 answer: true,
-                question_id: true
-              }
-            }
-          }
+                question_id: true,
+              },
+            },
+          },
         });
         return res.status(200).json({
           data: forms,
@@ -128,9 +130,10 @@ module.exports = {
           data: {
             title,
             user_id,
+            live:false,
             questions: {
               create: questions.map((q) => ({
-                // question_type: q.question_type,
+                // question_type: {create:getQuestionType(q.question_type)},
                 question: q.question,
                 required: q.required,
                 error: q.error_msg,
@@ -142,7 +145,7 @@ module.exports = {
                         value: opt.value,
                       })),
                     }
-                  : undefined,
+                  : null,
               })),
             },
           },
@@ -255,3 +258,20 @@ module.exports = {
     }
   },
 };
+
+function getQuestionType(qtype) {
+  switch (qtype) {
+    case 1:
+      return "Short";
+    case 2:
+      return "Long";
+    case 3:
+      return "Radio";
+    case 4:
+      return "Check";
+    case 5:
+      return "Dropdown";
+    default:
+      return null;
+  }
+}
