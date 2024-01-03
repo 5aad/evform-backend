@@ -18,7 +18,7 @@ router.delete("/user", (req, res) => users.deleteUser(req, res));
 
 // Form Table
 router.get("/forms", (req, res) => form.getForms(req, res));
-router.get("/formsUser", (req, res) => form.getFormsWithUsers(req, res));
+// router.get("/formsUser", (req, res) => form.getFormsWithUsers(req, res));
 router.get("/form", (req, res) => form.getSingleForm(req, res));
 router.post("/form", (req, res) => form.addForm(req, res));
 router.put("/live", (req, res) => form.updateLive(req, res));
