@@ -20,11 +20,19 @@ model users {
 }
 
 model option {
+  id                   Int                   @id @default(autoincrement())
+  label                String                @db.VarChar
+  question_id          Int
+  question             question              @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  has_response_options has_response_option[] @relation("response_to_option")
+}
+
+model has_response_option {
   id          Int      @id @default(autoincrement())
-  label       String   @db.VarChar
-  value       Int
-  question_id Int
-  question    question @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  option_id   Int
+  response_id Int
+  option      option   @relation("response_to_option", fields: [option_id], references: [id], onDelete: Cascade)
+  response    response @relation("response_to_option", fields: [response_id], references: [id], onDelete: Cascade)
 }
 
 model question {
@@ -57,15 +65,15 @@ model form {
 }
 
 model response {
-  id          Int      @id @default(autoincrement())
-  answer      String?  @db.VarChar
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  question_id Int
-  form_id     Int
-  form        form     @relation("response_to_form", fields: [form_id], references: [id], onDelete: Cascade)
-  question    question @relation("response_to_question", fields: [question_id], references: [id], onDelete: Cascade)
-
+  id                   Int                   @id @default(autoincrement())
+  answer               String?               @db.VarChar
+  created_at           DateTime              @default(now())
+  updated_at           DateTime              @updatedAt
+  question_id          Int
+  form_id              Int
+  form                 form                  @relation("response_to_form", fields: [form_id], references: [id], onDelete: Cascade)
+  question             question              @relation("response_to_question", fields: [question_id], references: [id], onDelete: Cascade)
+  has_response_options has_response_option[] @relation("response_to_option")
 }
 
 model roles {

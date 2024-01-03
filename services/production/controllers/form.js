@@ -96,8 +96,7 @@ module.exports = {
                 placeholder: true,
                 options: {
                   select: {
-                    label: true,
-                    value: true,
+                    label: true
                   },
                 },
               },
@@ -161,8 +160,7 @@ module.exports = {
                 options: q.options
                   ? {
                       create: q.options.map((opt) => ({
-                        label: opt.label,
-                        value: opt.value,
+                        label: opt.label
                       })),
                     }
                   : undefined,

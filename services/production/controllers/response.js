@@ -2,6 +2,7 @@ const { PrismaClient, Prisma } = require("@prisma/client");
 const prisma = new PrismaClient();
 const verifyToken = require("../utilities/verifyToken");
 const validator = require("validator");
+const { response } = require("express");
 
 module.exports = {
   // GET
@@ -62,20 +63,49 @@ module.exports = {
   },
 
   // GET SINGLE Response
-  async getSingleResponse(req, res) {
+  async getSingleFormWithResponse(req, res) {
     try {
       const { id } = req.query;
       let token = req.headers["authorization"];
       if (token) {
         if (validator.isEmpty(id.toString()))
-          return res.status(400).send({ data: "Please provide id" });
-        const ans = await prisma.response.findUnique({
+          return res.status(400).send({ data: "Please provide id " });
+        const form = await prisma.form.findUnique({
           where: {
             id: Number(id),
           },
+          select: {
+            id: true,
+            title: true,
+            responses: {
+              select: {
+                question: {
+                  select: {
+                    question: true,
+                    options: {
+                      select: {
+                        label: true,
+                      },
+                    },
+                  },
+                },
+                answer: true,
+                has_response_options: {
+                  select: {
+                    option: {
+                      select: {
+                        id: true,
+                        label: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         });
         return res.status(200).json({
-          data: ans,
+          data: form,
         });
       } else {
         return res
@@ -108,15 +138,21 @@ module.exports = {
         const createdResponses = [];
 
         for (const response of responses) {
-          const { question_id, answer } = response;
+          const { question_id, answer, response_options } = response;
 
           if (!question_id || answer === undefined) {
-            return res
-              .status(400)
-              .send({
-                data: "Please provide valid question_id and answer for each response",
-              });
+            return res.status(400).send({
+              data: "Please provide valid question_id and answer for each response",
+            });
           }
+
+          const optionsForQuestion = await prisma.option.findMany({
+            where: { question_id },
+          });
+
+          const optionsToCreate = response_options?.filter((opt) =>
+            optionsForQuestion.some((o) => o.id === opt.id)
+          );
 
           const createdResponse = await prisma.response.create({
             data: {
@@ -125,6 +161,13 @@ module.exports = {
               answer: Array.isArray(answer)
                 ? JSON.stringify(answer)
                 : answer.toString(),
+              has_response_options: {
+                create: optionsToCreate?.map((option) => ({
+                  option: {
+                    connect: { id: option.id },
+                  },
+                })),
+              },
             },
           });
 

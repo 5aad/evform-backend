@@ -41,7 +41,7 @@ router.get("/responses", (req, res) => response.getResponses(req, res));
 router.get("/responsesQueAndForm", (req, res) =>
   response.getResponseWithQueAndForm(req, res)
 );
-router.get("/response", (req, res) => response.getSingleResponse(req, res));
+router.get("/response", (req, res) => response.getSingleFormWithResponse(req, res));
 router.post("/response", (req, res) => response.addResponse(req, res));
 router.put("/response", (req, res) => response.updateResponse(req, res));
 router.delete("/response", (req, res) => response.deleteResponse(req, res));
