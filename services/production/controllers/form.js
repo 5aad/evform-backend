@@ -4,6 +4,7 @@ const generateToken = require("../utilities/generateToken");
 const verifyToken = require("../utilities/verifyToken");
 const validator = require("validator");
 const crypto = require("crypto");
+const encryptUrl = require("../utilities/encryptUrl");
 
 module.exports = {
   // GET
@@ -19,6 +20,7 @@ module.exports = {
             user_id: true,
             created_at:true,
             live:true,
+            url:true,
             responses: {
               select: {
                 id: true,
@@ -131,6 +133,7 @@ module.exports = {
             title,
             user_id,
             live:false,
+            url: "",
             questions: {
               create: questions.map((q) => ({
                 // question_type: {create:getQuestionType(q.question_type)},
@@ -145,7 +148,7 @@ module.exports = {
                         value: opt.value,
                       })),
                     }
-                  : null,
+                  : undefined,
               })),
             },
           },
@@ -157,6 +160,15 @@ module.exports = {
             },
           },
         });
+
+        await prisma.form.update({
+          where: {
+            id: form.id,
+          },
+          data: {
+            url:encryptUrl(`${form.id}`, form.title)
+          },
+        })
 
         return res.status(200).json({
           status: 200,

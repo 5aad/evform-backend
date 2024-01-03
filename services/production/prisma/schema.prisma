@@ -48,6 +48,7 @@ model form {
   updated_at DateTime   @updatedAt
   user_id    Int
   live       Boolean?   @db.Boolean
+  url        String?    @db.VarChar
   user       users      @relation("form_to_users", fields: [user_id], references: [id], onDelete: Cascade)
   questions  question[] @relation("question_to_form")
   responses  response[] @relation("response_to_form")
