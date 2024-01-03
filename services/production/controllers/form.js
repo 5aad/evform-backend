@@ -201,6 +201,49 @@ module.exports = {
       return res.status(500).json({ status: 500, message: e.message });
     }
   },
+  // PUT Update live in form
+  async updateLive(req, res) {
+    try {
+      const { id, live } = req.body;
+      let token = req.headers["authorization"];
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (
+          !id ||
+          validator.isEmpty(id.toString()) ||
+          !live ||
+          validator.isEmpty(live.toString())
+        )
+          return res.status(400).send({ data: "Please provide all fields " });
+        try {
+          const form = await prisma.form.update({
+            where: {
+              id: Number(id),
+            },
+            data: {
+              live: Boolean(live)
+            },
+          });
+          return res.status(200).json({
+            status: 200,
+            message: "Form Update Successfully",
+            data: form,
+          });
+        } catch (error) {
+          if (error.code === "P2025") {
+            return res.status(400).send({ data: "Form data does not exist!" });
+          }
+          throw error;
+        }
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide valid auth token" });
+      }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
 
   // PUT
   async updateForm(req, res) {
