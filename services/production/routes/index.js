@@ -47,5 +47,5 @@ router.put("/response", (req, res) => response.updateResponse(req, res));
 router.delete("/response", (req, res) => response.deleteResponse(req, res));
 
 //Test
-router.get("/test", (req, res) => res.status(200).json("I dont saad "));
+router.get("/test", (req, res) => res.status(200).json("Server is runing!! "));
 module.exports = router;

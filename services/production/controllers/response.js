@@ -77,25 +77,27 @@ module.exports = {
           select: {
             id: true,
             title: true,
-            responses: {
+            questions: {
               select: {
-                question: {
+                id: true,
+                question: true,
+                options: {
                   select: {
-                    question: true,
-                    options: {
-                      select: {
-                        label: true,
-                      },
-                    },
+                    id: true,
+                    label: true,
                   },
                 },
-                answer: true,
-                has_response_options: {
+                responses: {
                   select: {
-                    option: {
+                    answer: true,
+                    has_response_options: {
                       select: {
-                        id: true,
-                        label: true,
+                        option: {
+                          select: {
+                            id: true,
+                            label: true,
+                          },
+                        },
                       },
                     },
                   },
@@ -157,7 +159,7 @@ module.exports = {
             has_response_options: {
               create: optionsToCreate?.map((option) => ({
                 option: {
-                  connect: { id: option.id },
+                  connect: { id: option.id   },
                 },
               })),
             },
