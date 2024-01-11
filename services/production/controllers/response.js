@@ -127,7 +127,7 @@ module.exports = {
       if (validator.isEmpty(form_id.toString()) || !Array.isArray(responses)) {
         return res
           .status(400)
-          .send({ data: "Please provide valid form_id and responses array" });
+          .send({status:400, message: "Please provide valid form_id and responses array" });
       }
 
       const createdResponses = [];
@@ -135,9 +135,10 @@ module.exports = {
       for (const response of responses) {
         const { question_id, answer, response_options } = response;
 
-        if (!question_id || answer === undefined) {
+        if (!question_id) {
           return res.status(400).send({
-            data: "Please provide valid question_id and answer for each response",
+            status:400,
+            message: "Please provide valid question_id and answer for each response",
           });
         }
 
@@ -146,16 +147,14 @@ module.exports = {
         });
 
         const optionsToCreate = response_options?.filter((opt) =>
-          optionsForQuestion.some((o) => o.id === opt.id)
+          optionsForQuestion.some((o) => o.id === opt)
         );
-
+        console.log(optionsToCreate)
         const createdResponse = await prisma.response.create({
           data: {
             form_id,
             question_id,
-            answer: Array.isArray(answer)
-              ? JSON.stringify(answer)
-              : answer.toString(),
+            answer: answer?answer:"",
             has_response_options: {
               create: optionsToCreate?.map((option) => ({
                 option: {

@@ -85,6 +85,7 @@ module.exports = {
             id: true,
             title: true,
             user_id: true,
+            live:true,
             questions: {
               select: {
                 id: true,
